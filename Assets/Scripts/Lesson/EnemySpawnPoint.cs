@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class EnemySpawner : MonoBehaviour
+public class EnemySpawnPoint : MonoBehaviour
 {
-    [SerializeField] private GameObject _enemyPrefab;
+    [SerializeField] private Enemy _enemyPrefab;
     [SerializeField] private Vector3 _spawnPositionOffset;
 
     public void Spawn()

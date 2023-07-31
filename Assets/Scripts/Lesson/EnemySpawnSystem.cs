@@ -5,13 +5,13 @@ public class EnemySpawnSystem : MonoBehaviour
     [SerializeField] private float _timeToSpawnEnemy;
 
     private float _timer;
-    private EnemySpawner[] _spawners;
+    private EnemySpawnPoint[] _spawners;
     private int _spawnerIndex;
-    private EnemySpawner ChoisedEnemySpawner;
+    private EnemySpawnPoint ChoisedEnemySpawner;
 
     private void Awake()
     {
-        _spawners = GetComponentsInChildren<EnemySpawner>();
+        _spawners = GetComponentsInChildren<EnemySpawnPoint>();
         ChoisedEnemySpawner = _spawners[_spawnerIndex];
     }
 
