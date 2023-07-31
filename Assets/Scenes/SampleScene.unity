@@ -841,7 +841,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53f1970b1cc83db489b02a77ec295d93, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _timeToSpawnEnemy: 2
+  _delay: 2
+  _enemiesCount: 3
 --- !u!1001 &220868203
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,29 +1,36 @@
+using System.Collections;
 using UnityEngine;
 
 public class EnemySpawnSystem : MonoBehaviour
 {
-    [SerializeField] private float _timeToSpawnEnemy;
+    [SerializeField] private float _delay;
+    [SerializeField] private int _enemiesCount;
 
-    private float _timer;
     private EnemySpawnPoint[] _spawners;
     private int _spawnerIndex;
-    private EnemySpawnPoint ChoisedEnemySpawner;
+    private EnemySpawnPoint _choisedEnemySpawner;
+    private Coroutine _spawnProcedureCoroutine;
 
     private void Awake()
     {
         _spawners = GetComponentsInChildren<EnemySpawnPoint>();
-        ChoisedEnemySpawner = _spawners[_spawnerIndex];
+        _choisedEnemySpawner = _spawners[_spawnerIndex];
     }
 
-    private void Update()
+    private void Start()
     {
-        _timer += Time.deltaTime;
+        _spawnProcedureCoroutine = StartCoroutine(RunSpawnProcedure());
+    }
 
-        if (_timer >= _timeToSpawnEnemy)
+    private IEnumerator RunSpawnProcedure()
+    {
+        while (_enemiesCount > 0)
         {
             SpawnEnemyFromChoisedSpawner();
             ChoiseNextSpawner();
-            _timer = 0;
+            _enemiesCount--;
+
+            yield return new WaitForSeconds(_delay);
         }
     }
 
@@ -36,11 +43,11 @@ public class EnemySpawnSystem : MonoBehaviour
             _spawnerIndex = 0;
         }
 
-        ChoisedEnemySpawner = _spawners[_spawnerIndex];
+        _choisedEnemySpawner = _spawners[_spawnerIndex];
     }
 
     private void SpawnEnemyFromChoisedSpawner()
     {
-        ChoisedEnemySpawner.Spawn();
+        _choisedEnemySpawner.Spawn();
     }
 }
