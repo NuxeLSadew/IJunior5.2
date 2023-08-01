@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class EnemySpawnSystem : MonoBehaviour
+public class EnemySpawner : MonoBehaviour
 {
     [SerializeField] private float _delay;
     [SerializeField] private int _enemiesCount;
@@ -24,13 +24,14 @@ public class EnemySpawnSystem : MonoBehaviour
 
     private IEnumerator RunSpawnProcedure()
     {
-        while (_enemiesCount > 0)
+        WaitForSeconds waitForSeconds = new WaitForSeconds(_delay);
+
+        for (int i = 0; i < _enemiesCount; i++)
         {
+            yield return waitForSeconds;
+
             SpawnEnemyFromChoisedSpawner();
             ChoiseNextSpawner();
-            _enemiesCount--;
-
-            yield return new WaitForSeconds(_delay);
         }
     }
 
