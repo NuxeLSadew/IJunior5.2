@@ -1,9 +1,14 @@
 using System.Collections;
 using UnityEngine;
+using DG.Tweening;
+using DG.Tweening.Core;
+using DG.Tweening.Plugins.Options;
+using System.Collections.Generic;
 
 public class Movement : MonoBehaviour
 {
-    const int SpeedNeedsForMoveOnNextCell = 6;
+    private const int SpeedNeedsForMoveOnNextCell = 6;
+    private const float TimeToMove = 2;
 
     /// <summary>
     /// —корость движени€. ”казываетс€ в целых числах, перед каждым передвижением высчитываетс€ шанс
@@ -14,17 +19,17 @@ public class Movement : MonoBehaviour
     /// затем будет расчитыватьс€ шанс на передвижение на следующую клетку.
     /// </summary>
     [SerializeField] private int _speed;
-    [SerializeField] private float _timeToMove;
     [SerializeField] private bool _isLoggingMoveSuccess;
 
     private float _timer;
-    private WayChecker _wayChecker;
     private int _minSpeed = 0;
     private int _maxSpeed = 18;
     private float _portionOfTimeForMovementAnimation = 0.1f;
     private float _timeForMovementAnimation;
     private Coroutine _movementCoroutine;
-    private Coroutine _movementToNextCellCoroutine;
+    private TweenerCore<Vector3, Vector3, VectorOptions> _movementTweener;
+    private List<Pathway> _path;
+    private int _currentPathwayIndex;
 
     private void OnValidate()
     {
@@ -40,50 +45,53 @@ public class Movement : MonoBehaviour
 
     private void Start()
     {
-        _timeForMovementAnimation = _timeToMove * _portionOfTimeForMovementAnimation;
-        _wayChecker = GetComponentInChildren<WayChecker>();
+        _timeForMovementAnimation = TimeToMove * _portionOfTimeForMovementAnimation;
     }
 
     private void Update()
     {
         _timer += Time.deltaTime;
 
-        if (_timer >= _timeToMove)
+        if (_timer >= TimeToMove)
         {
             _timer = 0;
             _movementCoroutine = StartCoroutine(Move());
         }
     }
 
-    private IEnumerator Move()
+    public void SetPath(List<Pathway> path)
     {
-        int cellsToMoveCount = CalculateCellsCountToMove(_speed);
-
-        for (int i = 0; i < cellsToMoveCount; i++)
+        if (_path == null)
         {
-            _movementToNextCellCoroutine = StartCoroutine(MoveOnNextCell());
-
-            yield return new WaitForSeconds(_timeForMovementAnimation);
+            _path = path;
+        }
+        else
+        {
+            throw new System.Exception("Ќельз€ помен€ть путь");
         }
     }
 
-    private IEnumerator MoveOnNextCell()
+    private IEnumerator Move()
     {
-        if (_wayChecker.TryGetNextCellPosition(out Vector3 nextPosition))
+        int cellsToMoveCount = CalculateCellsCountToMove(_speed);
+        WaitForSeconds wait = new WaitForSeconds(_timeForMovementAnimation);
+
+        for (int i = 0; i < cellsToMoveCount; i++)
         {
-            Vector3 startPosition = transform.position;
-            nextPosition = CalculateNextPositionToMove(nextPosition);
-            
-            float animationTimer = 0;
+            MoveOnNextCell();
 
-            while (animationTimer < 1)
-            {
-                animationTimer += Time.deltaTime / _timeForMovementAnimation;
-                transform.position = Vector3.Lerp(startPosition, nextPosition, animationTimer);
-
-                yield return null;
-            }
+            yield return wait;
         }
+    }
+
+    private void MoveOnNextCell()
+    {
+        Vector3 nextPosition = _path[_currentPathwayIndex + 1].transform.position;
+        _currentPathwayIndex++;
+
+        nextPosition = CalculateNextPositionToMove(nextPosition);
+        
+        _movementTweener = transform.DOMove(nextPosition, _timeForMovementAnimation);
     }
 
     private int CalculateCellsCountToMove(int speed)
@@ -118,5 +126,11 @@ public class Movement : MonoBehaviour
         position.y += offsetY;
 
         return position;
+    }
+
+    private void OnDestroy()
+    {
+        _movementTweener.Kill();
+        StopCoroutine(_movementCoroutine);
     }
 }

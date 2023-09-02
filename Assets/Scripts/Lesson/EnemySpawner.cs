@@ -11,14 +11,11 @@ public class EnemySpawner : MonoBehaviour
     private EnemySpawnPoint _choisedEnemySpawner;
     private Coroutine _spawnProcedureCoroutine;
 
-    private void Awake()
-    {
-        _spawners = GetComponentsInChildren<EnemySpawnPoint>();
-        _choisedEnemySpawner = _spawners[_spawnerIndex];
-    }
-
     private void Start()
     {
+        _spawners = GetComponentsInChildren<EnemySpawnPoint>();
+        InitializeSpawnPointsPaths();
+        _choisedEnemySpawner = _spawners[_spawnerIndex];
         _spawnProcedureCoroutine = StartCoroutine(RunSpawnProcedure());
     }
 
@@ -50,5 +47,13 @@ public class EnemySpawner : MonoBehaviour
     private void SpawnEnemyFromChoisedSpawner()
     {
         _choisedEnemySpawner.Spawn();
+    }
+
+    private void InitializeSpawnPointsPaths()
+    {
+        foreach (EnemySpawnPoint enemySpawnPoint in _spawners)
+        {
+            enemySpawnPoint.CalculatePath();
+        }
     }
 }

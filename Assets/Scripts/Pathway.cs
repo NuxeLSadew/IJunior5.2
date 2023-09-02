@@ -1,35 +1,65 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Pathway : MonoBehaviour
 {
-    public bool IsNextPathwayDefined { get; private set; }
-    public Vector3 NextPathwayPosition { get; private set; }
+    [SerializeField] private List<PathwayChecker> _pathwayCheckers;
+    private bool _isReached;
 
-    private PathChecker[] _pathCheckers;
-    private Arrow _arrow;
+    public bool IsReached => _isReached;
 
-    private void Awake()
+    private void Start()
     {
-        _pathCheckers = GetComponentsInChildren<PathChecker>();
-        _arrow = GetComponentInChildren<Arrow>();
+        _isReached = false;
     }
 
-    private void FixedUpdate()
+    public void FindPathToWaypoint(Waypoint waypointEnd, List<List<Pathway>> temporalPathToNextWaypoint, List<Pathway> pathways = null)
     {
-        if (IsNextPathwayDefined)
+        if (pathways == null)
         {
-            return;
+            pathways = new List<Pathway>();
         }
 
-        foreach (PathChecker pathChecker in _pathCheckers)
+        pathways.Add(this);
+
+        List<Pathway> pathwaysNear = new List<Pathway>();
+
+        foreach (PathwayChecker pathwayChecker in _pathwayCheckers)
         {
-            if (pathChecker.IsNextCellDefined)
+            if (pathwayChecker.CheckPathway())
             {
-                IsNextPathwayDefined = true;
-                _arrow.RotateY(pathChecker.RotationToNextCell);
-                NextPathwayPosition = pathChecker.transform.position;
-                break;
+                if (pathwayChecker.FindedPathway.IsReached == false)
+                {
+                    pathwaysNear.Add(pathwayChecker.FindedPathway);
+                }
             }
+        }
+
+        foreach (Pathway pathway in pathwaysNear)
+        {
+            if (pathway.TryGetComponent<Waypoint>(out Waypoint waypoint) && waypoint == waypointEnd)
+            {
+                temporalPathToNextWaypoint.Add(pathways);
+                MakePathwaysUnreached(pathways, 1);
+                return;
+            }
+
+            _isReached = true;
+            pathway.FindPathToWaypoint(waypointEnd, temporalPathToNextWaypoint, pathways.ToList());
+        }
+
+        _isReached = false;
+    }
+
+    private void MakePathwaysUnreached(List<Pathway> pathways, int from)
+    {
+        int fromToIndexOffset = -1;
+        int indexFrom = from + fromToIndexOffset;
+
+        for (int i = indexFrom; i < pathways.Count; i++)
+        {
+            pathways[i]._isReached = false;
         }
     }
 }

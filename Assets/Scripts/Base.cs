@@ -1,17 +1,23 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class Base : MonoBehaviour, IDamageable
+public class Base : MonoBehaviour, IBase, IHasHealth
 {
     [SerializeField] private int _maxHealth;
-    [SerializeField] private int _health;
-    [SerializeField] private UnityEvent<float> _onChangeHealthEvent;
+    [SerializeField] private int _currentHealth;
+    [SerializeField] private UnityEvent _onChangeHealthEvent;
+
+    public event UnityAction OnChangeHealthEvent
+    {
+        add => _onChangeHealthEvent.AddListener(value);
+        remove => _onChangeHealthEvent.RemoveListener(value);
+    }
 
     public bool IsDefeated { get; private set; }
 
-    public int Health
+    public int CurrentHealth
     {
-        get => _health;
+        get => _currentHealth;
         set
         {
             if (value < 0)
@@ -24,30 +30,8 @@ public class Base : MonoBehaviour, IDamageable
                 value = _maxHealth;
             }
 
-            _health = value;
+            _currentHealth = value;
         }
-    }
-
-    private void OnValidate()
-    {
-        if (_maxHealth < 1)
-        {
-            _maxHealth = 1;
-        }
-
-        if (_health < 0)
-        {
-            _health = 0;
-        }
-        if (_health > _maxHealth)
-        {
-            _health = _maxHealth;
-        }
-    }
-
-    private void Awake()
-    {
-        _health = _maxHealth;
     }
 
     public void TakeDamage(int damage)
@@ -58,12 +42,54 @@ public class Base : MonoBehaviour, IDamageable
             return;
         }
 
-        _health -= damage;
-        _onChangeHealthEvent?.Invoke((float)_health / _maxHealth);
+        CurrentHealth -= damage;
+        _onChangeHealthEvent?.Invoke();
 
-        if (_health <= 0)
+        if (_currentHealth <= 0)
         {
             IsDefeated = true;
         }
+    }
+
+    public int GetMaxHealth()
+    {
+        return _maxHealth;
+    }
+
+    public int GetCurrentHealth()
+    {
+        return _currentHealth;
+    }
+
+    public void AddListenerOnChangeHealthEvent(UnityAction unityAction)
+    {
+        OnChangeHealthEvent += unityAction;
+    }
+
+    private void OnValidate()
+    {
+        if (_maxHealth < 1)
+        {
+            _maxHealth = 1;
+        }
+
+        if (_currentHealth < 0)
+        {
+            _currentHealth = 0;
+        }
+        if (_currentHealth > _maxHealth)
+        {
+            _currentHealth = _maxHealth;
+        }
+    }
+
+    private void Awake()
+    {
+        _currentHealth = _maxHealth;
+    }
+
+    private void OnDestroy()
+    {
+        _onChangeHealthEvent.RemoveAllListeners();
     }
 }
